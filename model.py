@@ -5,8 +5,9 @@ from keras import layers
 from utils import FREQUENCIES as FREQUENCIES
 from utils import TIMES as TIMES
 
+TIMES = 10
 
-def make_generator(freq_filters = 1, time_filters = 10, generated_times = 2, freq_kernel_size = 5, 
+def make_generator(freq_filters = 1, time_filters = 1, generated_times = 2, freq_kernel_size = 5, 
                    time_kernel_size = 2, new_layers = 5):
 
     inputs = keras.Input(shape=(TIMES, FREQUENCIES))
@@ -20,7 +21,7 @@ def make_generator(freq_filters = 1, time_filters = 10, generated_times = 2, fre
                                                         strides=1,padding = 'same', activation='relu'))
     
     time_kernels = list()
-    for _ in range(FREQUENCIES/10):
+    for _ in range(int(FREQUENCIES/10)):
         time_kernels.append(layers.Conv1D(filters = time_filters, kernel_size = time_kernel_size,
                                                         strides=1, padding = 'same', activation='relu'))
 
@@ -71,49 +72,6 @@ def make_generator(freq_filters = 1, time_filters = 10, generated_times = 2, fre
 
 
 
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -136,5 +94,5 @@ def make_discriminator(initial_filters = 64,number_convolution_layers=2,neurons_
     return dense
 
 if __name__ == '__main__':
-    dense = make_discriminator(initial_filters = 16,number_convolution_layers=2,neurons_per_dense_layer=256)
-    # make_generator()
+    #dense = make_discriminator(initial_filters = 16,number_convolution_layers=2,neurons_per_dense_layer=256)
+    make_generator()
