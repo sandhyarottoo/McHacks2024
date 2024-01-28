@@ -21,3 +21,5 @@ if continue_training:
 
 data = 0
 
+def train_GAN(generator, discriminator,gan,epochs=10,batch_number =32,number_steps = 320):
+    return
