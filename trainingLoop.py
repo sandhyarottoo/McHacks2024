@@ -23,10 +23,12 @@ def train_GAN(generator, discriminator,gan,epochs=10,batch_size =32,number_steps
                     start_of_song = np.random.randint(0,len(song)-201) # start at a random point in the song
                     beginning_song = np.expand_dims(song[start_of_song:start_of_song+100],axis = 0) #generator expects batch size,inthis case 1
                     context = np.copy(beginning_song) #context from which the generator builds the new rows
-                    generated_song = np.array(1,2,utils.TIMES*2,utils.FREQUENCIES)
-                    for i in range(times_to_generate_two_rows):
-                        generated_song[1,2,2*i:2*i+2,]
-                    generated_songs[index] = generator(beginning_song)
+                    generated_song = np.empty(shape=(1,2,utils.TIMES*2,utils.FREQUENCIES))
+                    generated_song[:, :, :utils.TIMES, :] = beginning_song
+                    for i in range(0, times_to_generate_two_rows, 2):
+                        generated_song[:, :,utils.TIMES + i:utils.TIMES + i+2, :] = generator(tf.Tensor(context))
+                        context = generated_song[:, :, i:i+utils.TIMES, :]
+                    generated_songs[index] = generated_song
                     true_songs[index] = np.expand_dims(song[start_of_song:start_of_song+200],axis=0) #
             discriminator.trainable = True
             critic_positive_loss = discriminator.train_on_batch(true_songs, -np.ones((batch_size,1)))
