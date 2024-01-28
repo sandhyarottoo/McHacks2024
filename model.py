@@ -90,54 +90,8 @@ def make_full_generator():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def make_discriminator(initial_filters = 64,number_convolution_layers=2,neurons_per_dense_layer=1024, number_dense_layers = 3):
-    inputs = tf.keras.Input(shape=(TIMES, FREQUENCIES, 1))
+    inputs = tf.keras.Input(shape=(2, 2*TIMES, FREQUENCIES, 1))
     filters = initial_filters
     batch = inputs
     assert(batch.shape[1:] == (TIMES, FREQUENCIES,1))

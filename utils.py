@@ -30,6 +30,3 @@ def setupCheckpoint(model, optimizer, direc):
 
 def restoreCheckpoint(checkpoint, checkpointManager):
     checkpoint.restore(checkpointManager.latest_checkpoint).expect_partial()
-
-def save():
-    checkpointManager.save()
