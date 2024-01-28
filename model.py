@@ -111,23 +111,20 @@ def make_generator(generator_filters = 1, generated_times = 2, frequency_kernel_
 
 
 def make_discriminator(initial_filters = 64,number_convolution_layers=2,neurons_per_dense_layer=1024):
-    inputs = tf.keras.Input(shape=(TIMES, FREQUENCIES, 1,1))
+    inputs = tf.keras.Input(shape=(TIMES, FREQUENCIES, 1))
     filters = initial_filters
-    batch = layers.Conv2D(filters=filters,kernel_size=3,padding='same',activation='relu')(inputs)
-    assert(batch.shape[1:] == (TIMES, FREQUENCIES,filters))
-    for _ in range(number_convolution_layers-1):
+    batch = inputs
+    assert(batch.shape[1:] == (TIMES, FREQUENCIES,1))
+    for _ in range(number_convolution_layers):
         convolution = layers.Conv2D(filters=filters*2,kernel_size=3,padding='same',activation='relu')(batch)
-        avgpool = layers.AveragePooling2D(padding='same')
-        batch = layers.BatchNormalization()(convolution)
-    print(batch.shape)
-    assert(batch.shape[1:] == (TIMES, FREQUENCIES,filters))
+        avgpool = layers.AveragePooling2D(padding='same')(convolution)
+        batch = layers.BatchNormalization()(avgpool)
+    assert(batch.shape[1:] == (int(TIMES/(2**number_convolution_layers)),int( FREQUENCIES/(2**number_convolution_layers)),filters*2))
     flatten = layers.Flatten()(batch)
-    print(flatten.shape)
     dense = layers.Dense(units = neurons_per_dense_layer, activation = 'relu')(flatten)
-    print(dense.shape)
-    assert(dense.shape[1:] == (neurons_per_dense_layer,filters))
+    assert(dense.shape[1:] == (neurons_per_dense_layer))
     return dense
 
 if __name__ == '__main__':
-    dense = make_discriminator(initial_filters = 16,number_convolution_layers=2,neurons_per_dense_layer=16)
-    make_generator()
+    dense = make_discriminator(initial_filters = 16,number_convolution_layers=2,neurons_per_dense_layer=256)
+    # make_generator()
