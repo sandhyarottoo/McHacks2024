@@ -1,4 +1,5 @@
-
+import tensorflow as tf
+import os
 
 #from C0 to C7, A = 440 Hz https://pages.mtu.edu/~suits/notefreqs.html
 notes = [16.35,17.32,18.35,19.45,20.60,21.83,23.12,24.50,25.96,27.50,
@@ -17,3 +18,15 @@ SAMPLERATE = 44100
 FREQUENCIES = 2000
 TIMES = 100
 SPLITRATE = 30
+
+def setupCheckpoint(model, optimizer, direc):
+    current_directory = os.path.dirname(os.path.realpath(__file__))
+    checkpoint_directory = os.path.join(current_directory, f'checkpoints/{direc}')
+    # creating checkpoint along with manager to save and load
+    checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=model)
+    checkpointManager = tf.train.CheckpointManager(checkpoint, checkpoint_directory, max_to_keep=4)
+
+    return checkpoint, checkpointManager
+
+def restoreCheckpoint(checkpoint, checkpointManager):
+    checkpoint.restore(checkpointManager.latest_checkpoint).expect_partial()

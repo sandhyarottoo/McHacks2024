@@ -68,59 +68,30 @@ def make_generator(freq_filters = 1, time_filters = 1, generated_times = 2, freq
     return model
 
 
+def make_full_generator():
 
+    re_gen = make_generator()
+    im_gen = make_generator()
 
+    inputs = keras.Input(shape=(2, TIMES, FREQUENCIES))
+    tensor1 = layers.Lambda(lambda x: x[:, 0, :, :])(inputs)
+    tensor2 = layers.Lambda(lambda x: x[:, 1, :, :])(inputs)
 
+    real_part = tf.expand_dims(re_gen(tensor1), axis=0)
+    im_part = tf.expand_dims(im_gen(tensor2), axis=0)
 
+    combined = layers.Concatenate()([real_part, im_part])
 
+    model = keras.Model(inputs=inputs, outputs=combined)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return model
 
 
 
 
 
 def make_discriminator(initial_filters = 64,number_convolution_layers=2,neurons_per_dense_layer=1024, number_dense_layers = 3):
-    inputs = tf.keras.Input(shape=(2,TIMES, FREQUENCIES))
+    inputs = tf.keras.Input(shape=(2, 2*TIMES, FREQUENCIES, 1))
     filters = initial_filters
     batch = inputs
     assert(batch.shape[1:] == (2,TIMES, FREQUENCIES))
