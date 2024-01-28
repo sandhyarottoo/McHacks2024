@@ -6,36 +6,30 @@ from scipy.signal import find_peaks
 from pydub import AudioSegment
 import os
 from utils import *
+from filtering import *
 
 path = os.path.dirname(os.path.realpath(__file__))
 file =  path + '/audioTests/test.wav'
 cutfile = path + '/audioTests/cutTest2.wav'
 
-def CutTo10Secs(file):
+def CutToXSecs(file,x):
     audio = AudioSegment.from_file(file)
-    cutAudio = audio[0.00:10000]
+    cutAudio = audio[0.00:x*1000]
     cutAudio.export(cutfile, format="wav")
 
 #CutTo10Secs(file)
 
 def splitFile(sampleRate,data):
-    print(sampleRate)
     timeSampleRate = 1/sampleRate
-    print(timeSampleRate)
     npoints = len(data)
-    print(npoints)
     #get time in ms
     timeMS= npoints*timeSampleRate*1000
-    newRate = timeMS/100
-    print(newRate)
+    newRate = timeMS//100
     return int(newRate)
 
 def getFFT(data):
     FFT = np.fft.rfft(data)
-    mean = np.mean(np.abs(FFT))
-    std = np.std(np.abs(FFT))
-    threshold = mean-2*std
-    filteredFFT = np.where(np.abs(FFT) > threshold, FFT, 0)
+    FFT = cleanFFT(FFT)
     return FFT
 
 def GetFreqSpectrum(filename):
@@ -43,20 +37,20 @@ def GetFreqSpectrum(filename):
     sampleRate, fulldata = wavfile.read(filename)
     ogFFT = np.fft.rfft(fulldata)
     splitRate = splitFile(sampleRate,fulldata)
-    FFTarray = []
+    realFFT,imFFT = [],[]
     for i in range(0,len(fulldata),splitRate):
         data = fulldata[i:i+splitRate]
         FFT = getFFT(data)
+        realFFT.append(FFT)
 
-        FFTarray.append(FFT)
-    FFTarray = np.array(FFTarray)
-    return FFTarray,ogFFT
-    # print(fft)
-    # freq = np.fft.rfftfreq(len(fft),d = 1/sampleRate)
-    # plt.plot(freq[:len(freq)//2],np.abs(fft)[:len(freq)//2])
-    # plt.show()
+    # realFFT = np.array(realFFT,dtype ='float')
+    # print(realFFT[0])
+    # imFFT = np.array(imFFT,dtype ='float')
+    return np.array(realFFT)
 
-array,ogFFT = GetFreqSpectrum(cutfile)
+
+
+
 
 def reconstruct(array,sampleRate):
     reconstructed = []
@@ -81,21 +75,12 @@ def reconstruct(array,sampleRate):
     cleanAudio = np.array(reconstructed)*0.0001
     ogAudio = np.fft.irfft(ogfilteredFFT)
 
-    wavfile.write(path + '/audioTests/testoutput11.wav', sampleRate, cleanAudio)
+    wavfile.write(path + '/audioTests/testoutput12.wav', sampleRate, cleanAudio)
     wavfile.write(path + '/audioTests/testoutput7.wav', sampleRate, ogAudio)
 
 
 
-reconstruct(array,44100)
-    
-    # #Plot the magnitude spectrum
-    # plt.figure(figsize=(10, 4))
-    # plt.plot(cutbinnedFreq[:len(cutbinnedFreq)//2], np.abs(cutFilteredFFT)[:len(cutbinnedFreq)//2])
-    # #plt.plot(cutbinnedFreq[peaks],cutFilteredFFT[peaks],'x')
-    # plt.xlabel('Frequency (Hz)')
-    # plt.ylabel('Magnitude')
-    # plt.title('Frequency Spectrum')
-    # plt.grid(True)
-    # plt.show()
+#reconstruct(array,SAMPLERATE)
+
 
     
