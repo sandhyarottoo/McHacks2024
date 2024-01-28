@@ -84,5 +84,14 @@ def make_generator(generator_filters = 1, generated_times = 100, frequency_kerne
 
 
 
-def make_discriminator():
-    inputs = inputs
+def make_discriminator(initial_filters = 64,number_convolution_layers=4,neurons_per_dense_layer=1024):
+    inputs = tf.keras.Input(shape=(TIMES, FREQUENCIES))
+    curr_shape = (TIMES, FREQUENCIES)
+    filters = initial_filters
+    conv = tf.keras.layers.Conv2D(filters=filters,kernel_size=3,padding='same',activation='relu')(inputs)
+    for _ in range(number_convolution_layers-1):
+        initial_filters*=2
+        conv = tf.keras.layers.Conv2D(filters=filters,kernel_size=3,padding='same',activation='relu')(conv)
+
+if __name__ == '__main__':
+    make_discriminator(initial_filters = 64,number_convolution_layers=4,neurons_per_dense_layer=1024)
