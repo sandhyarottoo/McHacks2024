@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.signal import *
+import h5py
 
 
 #FWHM = 2.35 sigma
@@ -13,17 +14,17 @@ peakwidths,_, _, _  = peak_widths(testData,peaks) #FWHM in # of samples
 
 
 peakstds = [int(x)//2 for x in peakwidths]
-print(peaks,peakstds)
+# print(peaks,peakstds)
 
 peakinfo = dict(zip(peaks,peakstds))
 
-for index,std in peakinfo.items():
 
+# plt.plot(testData)
+# plt.plot(peaks,testData[peaks],'x')
+# plt.show()
 
-
-plt.plot(testData)
-plt.plot(peaks,testData[peaks],'x')
-plt.show()
-
+with h5py.File('trainingdata.h5', "r") as f:
+    for key in f.keys():
+        print(key)
 
 

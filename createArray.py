@@ -37,20 +37,20 @@ def GetFreqSpectrum(filename):
     sampleRate, fulldata = wavfile.read(filename)
     ogFFT = np.fft.rfft(fulldata)
     splitRate = splitFile(sampleRate,fulldata)
-    FFTarray = []
+    realFFT,imFFT = [],[]
     for i in range(0,len(fulldata),splitRate):
         data = fulldata[i:i+splitRate]
         FFT = getFFT(data)
+        realFFT.append(FFT)
 
-        FFTarray.append(FFT)
-    FFTarray = np.array(FFTarray)
-    return FFTarray,ogFFT
-    # print(fft)
-    # freq = np.fft.rfftfreq(len(fft),d = 1/sampleRate)
-    # plt.plot(freq[:len(freq)//2],np.abs(fft)[:len(freq)//2])
-    # plt.show()
+    # realFFT = np.array(realFFT,dtype ='float')
+    # print(realFFT[0])
+    # imFFT = np.array(imFFT,dtype ='float')
+    return np.array(realFFT)
 
-array,ogFFT = GetFreqSpectrum(cutfile)
+
+
+
 
 def reconstruct(array,sampleRate):
     reconstructed = []
@@ -80,7 +80,7 @@ def reconstruct(array,sampleRate):
 
 
 
-reconstruct(array,SAMPLERATE)
+#reconstruct(array,SAMPLERATE)
 
 
     

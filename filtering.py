@@ -13,8 +13,6 @@ path = os.path.dirname(os.path.realpath(__file__))
 file =  path + '/audioTests/test.wav'
 cutfile = path + '/audioTests/cutTest2.wav'
 
-sampleRate, fulldata = wavfile.read(file)
-
 def cleanFFT(FFT):
     mean = np.mean(np.abs(FFT))
     std = np.std(np.abs(FFT))
@@ -31,30 +29,31 @@ def cleanFFT(FFT):
     return filteredFFT
 
 
-fft = np.fft.rfft(fulldata)
-
+#function for indexing elements in a numpy array
 def ind(array, item):
     for idx, val in np.ndenumerate(array):
         if val == item:
             return idx[0]
 
 def tune(FFT,samplerate):
+    '''
+    "autotune" - basically matches every peak freq to the nearest 'real' note from utils.py
+    and shifts the peak to that note
+    
+    
+    '''
 
+    #get the real part of the FFT
     reFFT = np.real(FFT)
     freqs = np.fft.rfftfreq(len(FFT),d=1/samplerate)
-    iFFT = np.imag(FFT)
 
+    #find peaks and peak widths
     peaks,properties = find_peaks(reFFT)
     peakwidths,_, _, _  = peak_widths(reFFT,peaks) #FWHM in # of samples
 
     #get # of samples that are included in this peak
     peakstds = [int(x)//2 for x in peakwidths]
 
-    # #get height of peak
-    # peakheights = properties['peak_heights']
-
-    # #put all the info in the dic
-    # peakparams = zip(peakstds,peakheights)
     peakinfo = dict(zip(peaks,peakstds))
 
     for index,std in peakinfo.items():
@@ -69,32 +68,33 @@ def tune(FFT,samplerate):
             #now do this again but to find the closest value in the freq list itself
             newFreqinFreqs = min(freqs,key = lambda x: abs(x-newFreq))
             newIndex = ind(freqs,newFreqinFreqs)
-
+            #shift the intensity peak to the new peak freq
             reFFT[index-std:index+std+1] = [0]*len(intensitySlice)
             reFFT[newIndex-std:newIndex+std+1] = intensitySlice
         except:
             continue
 
+    #replace the real part of the fft with the tuned part
     FFT.real = reFFT
 
     return FFT
 
 
-tunedFFT = tune(fft,sampleRate)
+# tunedFFT = tune(fft,sampleRate)
 
-# Compute the mean and standard deviation of the FFT coefficients
-mean_fft = np.mean(np.abs(tunedFFT))
-std_fft = np.std(np.abs(tunedFFT))
+# # Compute the mean and standard deviation of the FFT coefficients
+# mean_fft = np.mean(np.abs(tunedFFT))
+# std_fft = np.std(np.abs(tunedFFT))
 
-# Threshold for noise removal (adjust as needed)
-threshold = mean_fft + 2 * std_fft  # Example threshold: 3 standard deviations above the mean
+# # Threshold for noise removal (adjust as needed)
+# threshold = mean_fft + 2 * std_fft  # Example threshold: 3 standard deviations above the mean
 
-filteredFFT = np.where(np.abs(tunedFFT) > threshold, tunedFFT, 0)*0.0001 #factor to stop it from sounding insane
+# filteredFFT = np.where(np.abs(tunedFFT) > threshold, tunedFFT, 0)*0.0001 #factor to stop it from sounding insane
 
 
-cleanAudio = np.fft.irfft(filteredFFT)
+# cleanAudio = np.fft.irfft(filteredFFT)
 
-wavfile.write(path + '/audioTests/tunedaudio1.wav', sampleRate, cleanAudio)
+# wavfile.write(path + '/audioTests/tunedaudio1.wav', sampleRate, cleanAudio)
 
 def plotFFT(filename):
 
