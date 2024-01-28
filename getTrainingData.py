@@ -14,8 +14,6 @@ files = ['J.S. Bach_ Partita for Violin Solo No. 1 in B Minor, BWV 1002 - 6. Dou
             'J.S. Bach_ Partita for Violin Solo No. 1 in B Minor, BWV 1002 - 1. Allemande.wav']
 files = [path+el for el in files]
 
-#hf = h5py.File('trainingdata.h5', 'w')
-
 dReal,dIm = {},{}
 for i in range(len(files)):
     file = files[i]
@@ -25,13 +23,14 @@ for i in range(len(files)):
     im = np.imag(spec)
     dReal[i] = real
     dIm[i] = im
-
-master = {'real':dReal,'im':dIm}
-with open('trainingdata.pickle', 'wb') as f:
-    pickle.dump(master,f,protocol = pickle.HIGHEST_PROTOCOL)
     
+with h5py.File('trainingdata.h5','w') as f:
+    f.create_dataset('real',dReal)
+    f.create_dataset('im',dIm)
 
-    
+f.close()
+
+
 
 
 
