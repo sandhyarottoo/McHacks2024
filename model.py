@@ -11,33 +11,36 @@ def make_generator(generator_filters = 1, generated_times = 100, frequency_kerne
     inputs = keras.Input(shape=(TIMES, FREQUENCIES))
     outputs = inputs
 
-    for i in range(generated_times):
-        counter = 0
+    for counter in range(0, generated_times, 5):
 
         # run the 1D convs along the TIMES most recent rows 
         frequency_convolution_list = list() 
 
-        for j in range(counter, TIMES):
+        for j in range(counter, TIMES + counter):
             # Get a row then reshape it to match Conv1D requirements (shape will be (4000, 1))
             get_row = tf.keras.layers.Lambda(lambda x: x[:, j:j+1, :])(outputs)
             reshaped_row = tf.keras.layers.Reshape((FREQUENCIES, 1))(get_row)
+            assert reshaped_row.shape[1:] == (FREQUENCIES, 1)
+
             frequency_convolution_list.append(tf.conv1D(filters = generator_filters, kernel_size = frequency_kernel_size,
                                                         strides=1,padding = 'same', activation='RELU')(reshaped_row))
             
-        concatenate_frequencies = tf.keras.layers.Concatenate()(frequency_convolution_list)
+        concatenated_frequencies = tf.keras.layers.Concatenate(axis=1)(frequency_convolution_list)
 
         # run the 1D convs along the columns of the TIMES most recent rows
         time_convolution_list = list()
 
-        for j in range(counter, TIMES):
-            get_row = tf.keras.layers.Lambda(lambda x: x[:, j:j+1, :])(outputs)
-            reshaped_row = tf.keras.layers.Reshape((FREQUENCIES, 1))(get_row)
-            frequency_convolution_list.append(tf.conv1D(filters = generator_filters, kernel_size = frequency_kernel_size,
-                                                        strides=1,padding = 'same', activation='RELU')(reshaped_row))
+        for j in range(FREQUENCIES):
+            get_row = tf.keras.layers.Lambda(lambda x: x[:, counter:TIMES+counter, j:j+1])(outputs)
+            assert get_row.shape[1:] == (TIMES, 1)
+            time_convolution_list.append(tf.conv1D(filters = generator_filters, kernel_size = time_kernel_size,
+                                                        strides=1,padding = 'same', activation='RELU')(get_row))
+
+        concatenated_times = tf.keras.layers.Concatenate(axis=1)(time_convolution_list)
+
+        # 
 
 
-
-        counter += 1
 
 
 
