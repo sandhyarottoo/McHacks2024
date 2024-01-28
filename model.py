@@ -99,7 +99,7 @@ def make_GAN(generator, discriminator):
 
 
 
-def make_discriminator(initial_filters = 64,number_convolution_layers=2,neurons_per_dense_layer=1024, number_dense_layers = 3):
+def make_discriminator(initial_filters = 32,number_convolution_layers=2,neurons_per_dense_layer=128, number_dense_layers = 3):
     inputs = tf.keras.Input(shape=(2, 2*TIMES, FREQUENCIES))
     filters = initial_filters
     batch = inputs

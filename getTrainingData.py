@@ -14,7 +14,7 @@ files = ['J.S. Bach_ Partita for Violin Solo No. 1 in B Minor, BWV 1002 - 6. Dou
             'J.S. Bach_ Partita for Violin Solo No. 1 in B Minor, BWV 1002 - 1. Allemande.wav']
 files = [path+el for el in files]
 
-dReal,dIm = {},{}
+dReal,dIm = np.array(len(files)),np.array(len(files))
 for i in range(len(files)):
     file = files[i]
     spec = GetFreqSpectrum(file)
