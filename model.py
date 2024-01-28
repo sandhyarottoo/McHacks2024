@@ -4,10 +4,16 @@ import keras
 from keras import layers
 from utils import FREQUENCIES as FREQUENCIES
 from utils import TIMES as TIMES
+OPTIMIZER = keras.optimizers.RMSprop(learning_rate=0.00005)
+def w_loss(true_labels, predicted_labels):
+    return keras.backed(true_labels* predicted_labels)
+
+
+
 
 def make_generator(freq_filters = 1, time_filters = 1, generated_times = 2, freq_kernel_size = 5, 
                    time_kernel_size = 2, new_layers = 5):
-
+    TIMES = 10
     inputs = keras.Input(shape=(TIMES, FREQUENCIES))
     outputs = inputs
 
@@ -86,20 +92,24 @@ def make_full_generator():
 
     return model
 
-
+def make_GAN(generator, discriminator):
+    discriminator.trainable = False
+    model = keras.models.Sequential([generator, discriminator])
+    model.compile(loss=w_loss, optimizer=OPTIMIZER)
+    return model
 
 
 
 def make_discriminator(initial_filters = 64,number_convolution_layers=2,neurons_per_dense_layer=1024, number_dense_layers = 3):
-    inputs = tf.keras.Input(shape=(2, 2*TIMES, FREQUENCIES, 1))
+    inputs = tf.keras.Input(shape=(2, 2*TIMES, FREQUENCIES))
     filters = initial_filters
     batch = inputs
-    assert(batch.shape[1:] == (2,TIMES, FREQUENCIES))
+    assert(batch.shape[1:] == (2,2*TIMES, FREQUENCIES))
     for _ in range(number_convolution_layers):
-        convolution = layers.Conv2D(filters=filters*2,kernel_size=3,padding='same',activation='relu',data_format='channels_last')(batch)
-        avgpool = layers.AveragePooling2D(padding='same',data_format='channels_last')(convolution)
+        convolution = layers.Conv2D(filters=filters,kernel_size=3,padding='same',activation='relu',data_format='channels_first')(batch)
+        avgpool = layers.AveragePooling2D(padding='same',data_format='channels_first')(convolution)
         batch = layers.BatchNormalization()(avgpool)
-    assert(batch.shape[1:] == (filters*2,int(TIMES/(2**number_convolution_layers)),int( FREQUENCIES/(2**number_convolution_layers))))
+    assert(batch.shape[1:] == (filters,int(TIMES/(2**(number_convolution_layers-1))),int( FREQUENCIES/(2**(number_convolution_layers)))))
     flatten = layers.Flatten()(batch)
     dense = layers.Dense(units = neurons_per_dense_layer, activation = 'relu')(flatten)
     assert(dense.shape[1:] == (neurons_per_dense_layer))
@@ -108,9 +118,10 @@ def make_discriminator(initial_filters = 64,number_convolution_layers=2,neurons_
     assert(dense.shape[1:] == (neurons_per_dense_layer))
     output = layers.Dense(units = 1, activation = None)(dense)
     model = keras.Model(inputs=inputs, outputs=output)
+    model.compile(loss=w_loss,optimizer=OPTIMIZER)
     return model
 
 if __name__ == '__main__':
-    critic = make_discriminator(initial_filters = 32,number_convolution_layers=2,neurons_per_dense_layer=256,number_dense_layers=3)
-    critic.summary()
-    # make_generator()
+    critic = make_discriminator(initial_filters = 32,number_convolution_layers=2,neurons_per_dense_layer=128,number_dense_layers=3)
+    generator = make_generator()
+    gan = make_GAN(generator=generator,discriminator=critic)
