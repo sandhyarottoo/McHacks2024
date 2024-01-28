@@ -6,16 +6,28 @@ from utils import FREQUENCIES as FREQUENCIES
 from utils import TIMES as TIMES
 
 
-def make_generator(generator_filters = 1, generated_times = 2, frequency_kernel_size = 5, 
+def make_generator(freq_filters = 1, time_filters = 10, generated_times = 2, freq_kernel_size = 5, 
                    time_kernel_size = 2, new_layers = 5):
 
     inputs = keras.Input(shape=(TIMES, FREQUENCIES))
     outputs = inputs
 
+    # making the lists of conv layers to be reused
+
+    freq_kernels = list()
+    for _ in range(TIMES):
+        freq_kernels.append(layers.Conv1D(filters = freq_filters, kernel_size = freq_kernel_size,
+                                                        strides=1,padding = 'same', activation='relu'))
+    
+    time_kernels = list()
+    for _ in range(FREQUENCIES/10):
+        time_kernels.append(layers.Conv1D(filters = time_filters, kernel_size = time_kernel_size,
+                                                        strides=1, padding = 'same', activation='relu'))
+
     for counter in range(0, generated_times, new_layers):
 
         # run the 1D convs along the TIMES most recent rows 
-        frequency_convolution_list = list() 
+        freq_conv_output_list = list() 
 
         for j in range(counter, TIMES + counter):
             # Get a row then reshape it to match Conv1D requirements (shape will be (4000, 1))
@@ -23,31 +35,29 @@ def make_generator(generator_filters = 1, generated_times = 2, frequency_kernel_
             reshaped_row = layers.Reshape((FREQUENCIES, 1))(get_row)
             assert reshaped_row.shape[1:] == (FREQUENCIES, 1)
 
-            frequency_convolution_list.append(layers.Conv1D(filters = generator_filters, kernel_size = frequency_kernel_size,
-                                                        strides=1,padding = 'same', activation='relu')(reshaped_row))
+            freq_conv_output_list.append(freq_kernels[j-counter](reshaped_row))
             
-        concatenated_frequencies = layers.Concatenate(axis=1)(frequency_convolution_list)
+        concatenated_frequencies = layers.Concatenate(axis=1)(freq_conv_output_list)
         concatenated_frequencies = layers.Flatten()(concatenated_frequencies)
 
         # run the 1D convs along the columns of the TIMES most recent rows
-        time_convolution_list = list()
+        time_conv_output_list = list()
 
         for j in range(FREQUENCIES):
-            get_row = tf.expand_dims(layers.Lambda(lambda x: x[:, counter:TIMES+counter, j])(outputs), axis=-1)
-            assert get_row.shape[1:] == (TIMES, 1)
+            get_column = tf.expand_dims(layers.Lambda(lambda x: x[:, counter:TIMES+counter, j])(outputs), axis=-1)
+            assert get_column.shape[1:] == (TIMES, 1)
 
-            time_convolution_list.append(layers.Conv1D(filters = generator_filters, kernel_size = time_kernel_size,
-                                                        strides=1,padding = 'same', activation='relu')(get_row))
+            time_conv_output_list.append(time_kernels[j//10](get_column))
 
-        concatenated_times = layers.Concatenate(axis=1)(time_convolution_list)
+        concatenated_times = layers.Concatenate(axis=1)(time_conv_output_list)
         concatenated_times = layers.Flatten()(concatenated_times)
 
         # get the first vector that will be sent to the dense portion
         vector = layers.Concatenate(axis=1)([concatenated_frequencies, concatenated_times])
-        assert vector.shape[1:] == (TIMES*FREQUENCIES*generator_filters*2)
+        assert vector.shape[1:] == (TIMES*FREQUENCIES*(freq_filters + time_filters))
 
-        vector = layers.Dense(units=TIMES*FREQUENCIES*generator_filters, activation='relu')(vector)
-        vector = layers.Dense(units=TIMES*FREQUENCIES*generator_filters//2, activation='relu')(vector)
+        vector = layers.Dense(units=TIMES*FREQUENCIES*(freq_filters + time_filters)//2, activation='relu')(vector)
+        vector = layers.Dense(units=TIMES*FREQUENCIES*freq_filters//4, activation='relu')(vector)
         new_rows = layers.Dense(units=FREQUENCIES*new_layers, activation='relu')(vector)
         new_rows = layers.Reshape((new_layers, FREQUENCIES))(new_rows)
 
