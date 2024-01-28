@@ -13,16 +13,19 @@ with h5py.File('trainingdata.h5', 'r') as hf:
     print(hf.get('im'))
     print(hf.keys())
 
-def train_GAN(generator, discriminator,gan,epochs=10,batch_size =32,number_steps = 320,times_to_generate = 100):
+def train_GAN(generator, discriminator,gan,epochs=10,batch_size =32,number_steps = 320,times_to_generate_two_rows = 50):
     for _ in range(epochs):
         for _ in range(number_steps):
-            true_songs,generated_songs = np.array(batch_size,utils.TIMES,utils.FREQUENCIES),np.array(batch_size,utils.TIMES,utils.FREQUENCIES)
+            true_songs,generated_songs = np.array(batch_size,2,utils.TIMES*2,utils.FREQUENCIES),np.array(batch_size,2,utils.TIMES*2,utils.FREQUENCIES)
             with tf.GradientTape() as tape: #keep track of gradient over all gradient cycles
                 for index in range(batch_size):
-                    song = np.ones(200)
-                    start_of_song = np.random(0,len(song)-201) # start at a random point in the song
+                    song = np.ones(2,utils.TIMES,utils.FREQUENCIES)
+                    start_of_song = np.random.randint(0,len(song)-201) # start at a random point in the song
                     beginning_song = np.expand_dims(song[start_of_song:start_of_song+100],axis = 0) #generator expects batch size,inthis case 1
                     context = np.copy(beginning_song) #context from which the generator builds the new rows
+                    generated_song = np.array(1,2,utils.TIMES*2,utils.FREQUENCIES)
+                    for i in range(times_to_generate_two_rows):
+                        generated_song[1,2,2*i:2*i+2,]
                     generated_songs[index] = generator(beginning_song)
                     true_songs[index] = np.expand_dims(song[start_of_song:start_of_song+200],axis=0) #
             discriminator.trainable = True

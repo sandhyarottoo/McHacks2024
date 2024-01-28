@@ -65,8 +65,8 @@ def make_generator(freq_filters = 1, time_filters = 1, generated_times = 2, freq
     
     assert vector.shape[1:] == (TIMES*FREQUENCIES*(freq_filters + time_filters))
 
-    vector = layers.Dense(units=8000, activation='relu')(vector)
-    vector = layers.Dense(units=6000, activation='relu')(vector)
+    vector = layers.Dense(units=800, activation='relu')(vector)
+    vector = layers.Dense(units=600, activation='relu')(vector)
     new_rows = layers.Dense(units=FREQUENCIES*new_layers, activation='relu')(vector)
     new_rows = final_reshaper(new_rows)
 
