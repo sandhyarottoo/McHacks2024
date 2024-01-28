@@ -69,11 +69,8 @@ def make_generator(freq_filters = 1, time_filters = 1, generated_times = 2, freq
     vector = layers.Dense(units=600, activation='relu')(vector)
     new_rows = layers.Dense(units=FREQUENCIES*new_layers, activation='relu')(vector)
     new_rows = final_reshaper(new_rows)
-
-    outputs =  ax1_concat([outputs, new_rows])
-    assert outputs.shape[1:] == (TIMES + new_layers, FREQUENCIES)
     
-    model = keras.Model(inputs=inputs, outputs=outputs)
+    model = keras.Model(inputs=inputs, outputs=new_rows)
 
     return model
 
